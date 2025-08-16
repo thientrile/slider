@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // import all the components we are going to use
 import {
@@ -9,8 +10,6 @@ import {
   Button,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-//import AppIntroSlider to use it
 import AppIntroSlider from 'react-native-app-intro-slider';
 import { ListRenderItemInfo } from 'react-native';
 
@@ -34,13 +33,64 @@ const RenderItem = ({ item }: ListRenderItemInfo<Slide>) => {
 
 const App = () => {
   const [showRealApp, setShowRealApp] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
-  const onDone = () => {
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const value = await AsyncStorage.getItem('hasSeenOnboarding');
+      if (value === 'true') {
+        setHasSeenOnboarding(true);
+        setShowRealApp(true);
+      } else {
+        setHasSeenOnboarding(false);
+      }
+    } catch (error) {
+      console.log('Error checking onboarding status:', error);
+      setHasSeenOnboarding(false);
+    }
+  };
+
+  const saveOnboardingStatus = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      setHasSeenOnboarding(true);
+    } catch (error) {
+      console.log('Error saving onboarding status:', error);
+    }
+  };
+
+  const onDone = async () => {
+    await saveOnboardingStatus();
     setShowRealApp(true);
   };
-  const onSkip = () => {
+
+  const onSkip = async () => {
+    await saveOnboardingStatus();
     setShowRealApp(true);
   };
+
+  const resetOnboarding = async () => {
+    try {
+      await AsyncStorage.removeItem('hasSeenOnboarding');
+      setHasSeenOnboarding(false);
+      setShowRealApp(false);
+    } catch (error) {
+      console.log('Error resetting onboarding:', error);
+    }
+  };
+
+  // Hiển thị loading nếu chưa check xong onboarding status
+  if (hasSeenOnboarding === null) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <>
@@ -56,7 +106,7 @@ const App = () => {
             </Text>
             <Button
               title="Show Intro Slider again"
-              onPress={() => setShowRealApp(false)}
+              onPress={resetOnboarding}
             />
           </View>
         </SafeAreaView>
@@ -84,6 +134,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 10,
     justifyContent: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   slide: {
     flex: 1,
