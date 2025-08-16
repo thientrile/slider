@@ -2,13 +2,13 @@ import React, {useState} from 'react';
 
 // import all the components we are going to use
 import {
-  SafeAreaView,
   StyleSheet,
   View,
   Text,
   Image,
   Button,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 //import AppIntroSlider to use it
 import AppIntroSlider from 'react-native-app-intro-slider';
@@ -45,7 +45,7 @@ const App = () => {
   return (
     <>
       {showRealApp ? (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
           <View style={styles.container}>
             <Text style={styles.titleStyle}>
               React Native App Intro Slider using AppIntroSlider
@@ -61,13 +61,15 @@ const App = () => {
           </View>
         </SafeAreaView>
       ) : (
-        <AppIntroSlider
-          data={slides}
-          renderItem={RenderItem}
-          onDone={onDone}
-          showSkipButton={true}
-          onSkip={onSkip}
-        />
+        <SafeAreaView style={{flex: 1}} edges={['bottom']}>
+          <AppIntroSlider
+            data={slides}
+            renderItem={RenderItem}
+            onDone={onDone}
+            showSkipButton={true}
+            onSkip={onSkip}
+          />
+        </SafeAreaView>
       )}
     </>
   );
@@ -86,8 +88,7 @@ const styles = StyleSheet.create({
   slide: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingBottom: 100,
+    justifyContent: 'space-around'
   },
   titleStyle: {
     padding: 10,
